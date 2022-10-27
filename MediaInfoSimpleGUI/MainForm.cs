@@ -1,13 +1,18 @@
 using MediaInfoLib;
+using System.Reflection;
 using Timer = System.Windows.Forms.Timer;
+
+#pragma warning disable IDE0017 // Simplify object initialization
 
 namespace MediaInfoSimpleGUI
 {
     public partial class MainForm : Form
     {
-        private string SourcePath = "";
+        private string sourcePath = "";
 
-        private char[] invalidChars = Path.GetInvalidPathChars();
+        private readonly string loadingText = "Loading...";
+
+        private readonly char[] invalidChars = Path.GetInvalidPathChars();
 
         private Timer timer;
 
@@ -21,10 +26,6 @@ namespace MediaInfoSimpleGUI
             buttonCopy.Enabled = false;
             buttonSave.Enabled = false;
             labelInfo.Text = "";
-
-            MediaInfo MI = new MediaInfo();
-            richTextBoxOutput.Text = MI.Option("Info_Version");
-            MI.Close();
         }
 
         private void MainForm_Shown(object sender, EventArgs e)
@@ -32,8 +33,21 @@ namespace MediaInfoSimpleGUI
             string[] commandLineArgs = Environment.GetCommandLineArgs();
             if (commandLineArgs.Length > 1)
             {
-                LoadFile(commandLineArgs[1]);
+                richTextBoxOutput.Text = loadingText;
+                
+                timer = new();
+                timer.Interval = 250;
+                timer.Tick += ShownTimerElapsed;
+                timer.Start();
             }
+        }
+
+        private void ShownTimerElapsed(object sender, EventArgs eventArgs)
+        {
+            timer.Stop();
+            string[] commandLineArgs = Environment.GetCommandLineArgs();
+            if (commandLineArgs.Length > 1)
+                LoadFile(commandLineArgs[1]);
         }
 
         private void MainForm_DragEnter(object sender, DragEventArgs e)
@@ -57,92 +71,88 @@ namespace MediaInfoSimpleGUI
 
         private void buttonCopy_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(SourcePath))
+            if (!string.IsNullOrEmpty(sourcePath))
             {
                 Clipboard.SetText(richTextBoxOutput.Text);
-                ShowInfo("Copied info to clipboard");
+                ShowNotify("Copied info to clipboard");
             }
         }
 
         private void buttonSave_Click(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(SourcePath))
+            if (!string.IsNullOrEmpty(sourcePath))
             {
-                using (SaveFileDialog dialog = new SaveFileDialog())
+                using SaveFileDialog dialog = new();
+
+                dialog.OverwritePrompt = true;
+                dialog.ValidateNames = true;
+                dialog.Filter = "Text files|*.txt";
+
+                try
                 {
-                    dialog.OverwritePrompt = true;
-                    dialog.ValidateNames = true;
-                    dialog.Filter = "Text files|*.txt";
+                    dialog.InitialDirectory = Path.GetDirectoryName(sourcePath);
+                    dialog.FileName = Path.GetFileName(sourcePath) + ".txt";
+                }
+                catch (Exception) { }
 
-                    try
-                    {
-                        dialog.InitialDirectory = Path.GetDirectoryName(SourcePath);
-                        dialog.FileName = Path.GetFileName(SourcePath) + ".txt";
-                    }
-                    catch (Exception) { }
-
-                    if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
-                    {
-                        //string ext = Path.GetExtension(dialog.FileName).ToLower();
-
-                        File.WriteAllText(dialog.FileName, richTextBoxOutput.Text);
-                        ShowInfo("Saved info to file");
-                    }
+                if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
+                {
+                    File.WriteAllText(dialog.FileName, richTextBoxOutput.Text);
+                    ShowNotify("Saved info to file");
                 }
             }
         }
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            using (OpenFileDialog dialog = new OpenFileDialog())
-            {
-                dialog.CheckFileExists = true;
-                dialog.CheckPathExists = true;
-                dialog.ValidateNames = true;
+            using OpenFileDialog dialog = new();
 
-                if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
-                {
-                    LoadFile(dialog.FileName);
-                }
+            dialog.CheckFileExists = true;
+            dialog.CheckPathExists = true;
+            dialog.ValidateNames = true;
+
+            if (!string.IsNullOrWhiteSpace(sourcePath))
+            {
+                string inPath = Path.GetDirectoryName(sourcePath);
+                if (Directory.Exists(inPath))
+                    dialog.InitialDirectory = inPath;
             }
+
+            if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
+                LoadFile(dialog.FileName);
+        }
+
+        private void buttonAbout_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(GetAboutInfo(), "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void LoadFile(string path)
         {
-            SourcePath = "";
+            sourcePath = "";
+
             labelInfo.Text = "";
             textBoxIn.Text = "";
-            richTextBoxOutput.Text = "";
+            richTextBoxOutput.Text = loadingText;
             buttonCopy.Enabled = false;
             buttonSave.Enabled = false;
 
             try
             {
                 ValidateInputFile(path);
-                SourcePath = path;
+                sourcePath = path;
             }
             catch (Exception ex)
             {
                 richTextBoxOutput.Text = ex.Message;
-                //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return;
             }
 
-            textBoxIn.Text = Path.GetFileName(SourcePath);
-            richTextBoxOutput.Text = "Loading...";
+            textBoxIn.Text = Path.GetFileName(sourcePath);
 
-            MediaInfo MI = new MediaInfo();
+            MediaInfo MI = new();
 
-            /*string ToDisplay;
-            //Test if version of DLL is compatible : 3rd argument is "version of DLL tested;Your application name;Your application version"
-            ToDisplay = MI.Option("Info_Version", "0.7.0.0;MediaInfoDLL_Example_CS;0.7.0.0");
-            if (ToDisplay.Length == 0)
-            {
-                richTextBoxOutput.Text = "MediaInfo.Dll: this version of the DLL is not compatible";
-                return;
-            }*/
-
-            int res = MI.Open(SourcePath);
+            int res = MI.Open(sourcePath);
             //MI.Option("Complete");
             richTextBoxOutput.Text = MI.Inform();
             MI.Close();
@@ -156,36 +166,50 @@ namespace MediaInfoSimpleGUI
 
         private void ValidateInputFile(string input)
         {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new Exception("No file selected!");
-            }
-            if (input.IndexOfAny(invalidChars) >= 0)
-            {
-                throw new Exception("Invalid chars in path!");
-            }
+            if (string.IsNullOrWhiteSpace(input) || input.IndexOfAny(invalidChars) >= 0)
+                throw new("Invalid file path!");
             if (!File.Exists(input))
-            {
-                throw new Exception("File not found!");
-            }
+                throw new("File not found!");
         }
 
-        private void ShowInfo(string text)
+        private void ShowNotify(string text)
         {
             labelInfo.Text = text;
             if (timer != null)
                 timer.Stop();
 
-            timer = new Timer();
+            timer = new();
             timer.Interval = 3000;
-            timer.Tick += timerElapsed;
+            timer.Tick += NotifyTimerElapsed;
             timer.Start();
         }
 
-        private void timerElapsed(object sender, EventArgs eventArgs)
+        private void NotifyTimerElapsed(object sender, EventArgs eventArgs)
         {
             timer.Stop();
             labelInfo.Text = "";
+        }
+
+        private static string GetAboutInfo()
+        {
+            Assembly ass = Assembly.GetExecutingAssembly();
+            
+            string appName = ((AssemblyTitleAttribute)ass.GetCustomAttribute(typeof(AssemblyTitleAttribute))).Title;
+            
+            Version version = ass.GetName().Version;
+            string niceVersion = version.Major.ToString() + "." + version.Minor.ToString();
+            if (version.Build != 0 || version.Revision != 0)
+                niceVersion += "." + version.Build.ToString();
+            if (version.Revision != 0)
+                niceVersion += "." + version.Revision.ToString();
+
+            string info = $"{appName} - v{niceVersion}\n";
+
+            MediaInfo MI = new();
+            info += MI.Option("Info_Version");
+            MI.Close();
+
+            return info;
         }
     }
 }

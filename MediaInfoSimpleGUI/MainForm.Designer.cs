@@ -36,6 +36,7 @@
             this.buttonOpen = new System.Windows.Forms.Button();
             this.buttonCopy = new System.Windows.Forms.Button();
             this.labelInfo = new System.Windows.Forms.Label();
+            this.buttonAbout = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // richTextBoxOutput
@@ -65,7 +66,7 @@
             this.buttonClose.Location = new System.Drawing.Point(853, 839);
             this.buttonClose.Name = "buttonClose";
             this.buttonClose.Size = new System.Drawing.Size(112, 34);
-            this.buttonClose.TabIndex = 5;
+            this.buttonClose.TabIndex = 7;
             this.buttonClose.Text = "Exit";
             this.buttonClose.UseVisualStyleBackColor = true;
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
@@ -106,8 +107,18 @@
             this.labelInfo.Location = new System.Drawing.Point(243, 844);
             this.labelInfo.Name = "labelInfo";
             this.labelInfo.Size = new System.Drawing.Size(24, 25);
-            this.labelInfo.TabIndex = 6;
+            this.labelInfo.TabIndex = 5;
             this.labelInfo.Text = "...";
+            // 
+            // buttonAbout
+            // 
+            this.buttonAbout.Location = new System.Drawing.Point(735, 839);
+            this.buttonAbout.Name = "buttonAbout";
+            this.buttonAbout.Size = new System.Drawing.Size(112, 34);
+            this.buttonAbout.TabIndex = 6;
+            this.buttonAbout.Text = "About";
+            this.buttonAbout.UseVisualStyleBackColor = true;
+            this.buttonAbout.Click += new System.EventHandler(this.buttonAbout_Click);
             // 
             // MainForm
             // 
@@ -115,6 +126,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(972, 880);
+            this.Controls.Add(this.buttonAbout);
             this.Controls.Add(this.labelInfo);
             this.Controls.Add(this.buttonCopy);
             this.Controls.Add(this.buttonOpen);
@@ -147,5 +159,6 @@
         private Button buttonOpen;
         private Button buttonCopy;
         private Label labelInfo;
+        private Button buttonAbout;
     }
 }
