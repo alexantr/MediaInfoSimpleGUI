@@ -1,4 +1,5 @@
 using MediaInfoLib;
+using Timer = System.Windows.Forms.Timer;
 
 namespace MediaInfoSimpleGUI
 {
@@ -8,6 +9,8 @@ namespace MediaInfoSimpleGUI
 
         private char[] invalidChars = Path.GetInvalidPathChars();
 
+        private Timer timer;
+
         public MainForm()
         {
             InitializeComponent();
@@ -15,7 +18,13 @@ namespace MediaInfoSimpleGUI
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            buttonCopy.Enabled = false;
             buttonSave.Enabled = false;
+            labelInfo.Text = "";
+
+            MediaInfo MI = new MediaInfo();
+            richTextBoxOutput.Text = MI.Option("Info_Version");
+            MI.Close();
         }
 
         private void MainForm_Shown(object sender, EventArgs e)
@@ -46,13 +55,22 @@ namespace MediaInfoSimpleGUI
             Close();
         }
 
+        private void buttonCopy_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(SourcePath))
+            {
+                Clipboard.SetText(richTextBoxOutput.Text);
+                ShowInfo("Copied info to clipboard");
+            }
+        }
+
         private void buttonSave_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(SourcePath))
             {
                 using (SaveFileDialog dialog = new SaveFileDialog())
                 {
-                    dialog.OverwritePrompt = false; // ask later
+                    dialog.OverwritePrompt = true;
                     dialog.ValidateNames = true;
                     dialog.Filter = "Text files|*.txt";
 
@@ -68,6 +86,7 @@ namespace MediaInfoSimpleGUI
                         //string ext = Path.GetExtension(dialog.FileName).ToLower();
 
                         File.WriteAllText(dialog.FileName, richTextBoxOutput.Text);
+                        ShowInfo("Saved info to file");
                     }
                 }
             }
@@ -90,6 +109,13 @@ namespace MediaInfoSimpleGUI
 
         private void LoadFile(string path)
         {
+            SourcePath = "";
+            labelInfo.Text = "";
+            textBoxIn.Text = "";
+            richTextBoxOutput.Text = "";
+            buttonCopy.Enabled = false;
+            buttonSave.Enabled = false;
+
             try
             {
                 ValidateInputFile(path);
@@ -97,15 +123,12 @@ namespace MediaInfoSimpleGUI
             }
             catch (Exception ex)
             {
-                textBoxIn.Text = "";
-                richTextBoxOutput.Text = "";
-                buttonSave.Enabled = false;
-
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return;
             }
 
             textBoxIn.Text = Path.GetFileName(SourcePath);
+            richTextBoxOutput.Text = "Loading...";
 
             MediaInfo MI = new MediaInfo();
 
@@ -118,12 +141,16 @@ namespace MediaInfoSimpleGUI
                 return;
             }*/
 
-            MI.Open(SourcePath);
+            int res = MI.Open(SourcePath);
             //MI.Option("Complete");
             richTextBoxOutput.Text = MI.Inform();
             MI.Close();
 
-            buttonSave.Enabled = true;
+            if (res > 0)
+            {
+                buttonCopy.Enabled = true;
+                buttonSave.Enabled = true;
+            }
         }
 
         private void ValidateInputFile(string input)
@@ -140,6 +167,24 @@ namespace MediaInfoSimpleGUI
             {
                 throw new Exception("File not found!");
             }
+        }
+
+        private void ShowInfo(string text)
+        {
+            labelInfo.Text = text;
+            if (timer != null)
+                timer.Stop();
+
+            timer = new Timer();
+            timer.Interval = 3000;
+            timer.Tick += timerElapsed;
+            timer.Start();
+        }
+
+        private void timerElapsed(object sender, EventArgs eventArgs)
+        {
+            timer.Stop();
+            labelInfo.Text = "";
         }
     }
 }
