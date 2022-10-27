@@ -123,7 +123,8 @@ namespace MediaInfoSimpleGUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+                richTextBoxOutput.Text = ex.Message;
+                //MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 return;
             }
 
