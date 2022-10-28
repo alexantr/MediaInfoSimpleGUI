@@ -33,7 +33,7 @@ namespace MediaInfoSimpleGUI
             string[] commandLineArgs = Environment.GetCommandLineArgs();
             if (commandLineArgs.Length > 1)
             {
-                richTextBoxOutput.Text = loadingText;
+                textBoxOutput.Text = loadingText;
                 
                 timer = new();
                 timer.Interval = 250;
@@ -73,7 +73,7 @@ namespace MediaInfoSimpleGUI
         {
             if (!string.IsNullOrEmpty(sourcePath))
             {
-                Clipboard.SetText(richTextBoxOutput.Text);
+                Clipboard.SetText(textBoxOutput.Text);
                 ShowNotify("Copied info to clipboard");
             }
         }
@@ -97,7 +97,7 @@ namespace MediaInfoSimpleGUI
 
                 if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
                 {
-                    File.WriteAllText(dialog.FileName, richTextBoxOutput.Text);
+                    File.WriteAllText(dialog.FileName, textBoxOutput.Text);
                     ShowNotify("Saved info to file");
                 }
             }
@@ -133,7 +133,7 @@ namespace MediaInfoSimpleGUI
 
             labelInfo.Text = "";
             textBoxIn.Text = "";
-            richTextBoxOutput.Text = loadingText;
+            textBoxOutput.Text = loadingText;
             buttonCopy.Enabled = false;
             buttonSave.Enabled = false;
 
@@ -144,7 +144,7 @@ namespace MediaInfoSimpleGUI
             }
             catch (Exception ex)
             {
-                richTextBoxOutput.Text = ex.Message;
+                textBoxOutput.Text = ex.Message;
                 return;
             }
 
@@ -154,7 +154,7 @@ namespace MediaInfoSimpleGUI
 
             int res = MI.Open(sourcePath);
             //MI.Option("Complete");
-            richTextBoxOutput.Text = MI.Inform();
+            textBoxOutput.Text = MI.Inform();
             MI.Close();
 
             if (res > 0)

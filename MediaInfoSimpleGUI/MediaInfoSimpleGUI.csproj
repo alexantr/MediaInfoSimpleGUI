@@ -6,11 +6,11 @@
     <Nullable>annotations</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>MediaInfo.ico</ApplicationIcon>
+    <ApplicationIcon>MediaInfoLite.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="MediaInfo.ico" />
+    <Content Include="MediaInfoLite.ico" />
   </ItemGroup>
 
   <ItemGroup>
