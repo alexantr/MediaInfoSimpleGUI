@@ -91,7 +91,7 @@ namespace MediaInfoSimpleGUI
                 try
                 {
                     dialog.InitialDirectory = Path.GetDirectoryName(sourcePath);
-                    dialog.FileName = Path.GetFileName(sourcePath) + ".txt";
+                    dialog.FileName = "MI " + Path.GetFileName(sourcePath) + ".txt";
                 }
                 catch (Exception) { }
 
