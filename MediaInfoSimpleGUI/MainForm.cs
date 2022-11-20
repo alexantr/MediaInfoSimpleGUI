@@ -64,12 +64,47 @@ namespace MediaInfoSimpleGUI
             LoadFile(files[0]);
         }
 
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+                Close();
+
+            if (e.Control && e.KeyCode == Keys.S)
+                SaveInfo();
+
+            if (e.Control && e.KeyCode == Keys.O)
+                OpenFile();
+
+            if (e.Control && e.KeyCode == Keys.C && (!textBoxOutput.Focused || textBoxOutput.SelectionLength == 0))
+                CopyInfo();
+        }
+
         private void buttonClose_Click(object sender, EventArgs e)
         {
             Close();
         }
 
         private void buttonCopy_Click(object sender, EventArgs e)
+        {
+            CopyInfo();
+        }
+
+        private void buttonSave_Click(object sender, EventArgs e)
+        {
+            SaveInfo();
+        }
+
+        private void buttonOpen_Click(object sender, EventArgs e)
+        {
+            OpenFile();
+        }
+
+        private void buttonAbout_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(GetAboutInfo(), "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void CopyInfo()
         {
             if (!string.IsNullOrEmpty(sourcePath))
             {
@@ -78,32 +113,7 @@ namespace MediaInfoSimpleGUI
             }
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(sourcePath))
-            {
-                using SaveFileDialog dialog = new();
-
-                dialog.OverwritePrompt = true;
-                dialog.ValidateNames = true;
-                dialog.Filter = "Text files|*.txt";
-
-                try
-                {
-                    dialog.InitialDirectory = Path.GetDirectoryName(sourcePath);
-                    dialog.FileName = "MI " + Path.GetFileName(sourcePath) + ".txt";
-                }
-                catch (Exception) { }
-
-                if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
-                {
-                    File.WriteAllText(dialog.FileName, textBoxOutput.Text);
-                    ShowNotify("Saved info to file");
-                }
-            }
-        }
-
-        private void buttonOpen_Click(object sender, EventArgs e)
+        private void OpenFile()
         {
             using OpenFileDialog dialog = new();
 
@@ -122,9 +132,29 @@ namespace MediaInfoSimpleGUI
                 LoadFile(dialog.FileName);
         }
 
-        private void buttonAbout_Click(object sender, EventArgs e)
+        private void SaveInfo()
         {
-            MessageBox.Show(GetAboutInfo(), "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (!string.IsNullOrEmpty(sourcePath))
+            {
+                using SaveFileDialog dialog = new();
+
+                dialog.OverwritePrompt = true;
+                dialog.ValidateNames = true;
+                dialog.Filter = "Text files|*.txt";
+
+                try
+                {
+                    dialog.InitialDirectory = Path.GetDirectoryName(sourcePath);
+                    dialog.FileName = "MediaInfo " + Path.GetFileName(sourcePath) + ".txt";
+                }
+                catch (Exception) { }
+
+                if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.FileName))
+                {
+                    File.WriteAllText(dialog.FileName, textBoxOutput.Text);
+                    ShowNotify("Saved info to file");
+                }
+            }
         }
 
         private void LoadFile(string path)
@@ -210,12 +240,6 @@ namespace MediaInfoSimpleGUI
             MI.Close();
 
             return info;
-        }
-
-        private void MainForm_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Escape)
-                Close();
         }
     }
 }
