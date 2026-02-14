@@ -18,3 +18,8 @@ Windows Registry Editor Version 5.00
 
 
 ```
+
+---
+
+This program uses [MediaInfo](https://mediaarea.net/MediaInfo) library,
+Copyright © 2002-2025 [MediaArea.net SARL](mailto:Info@MediaArea.net).
